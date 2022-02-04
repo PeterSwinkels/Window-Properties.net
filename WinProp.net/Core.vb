@@ -104,14 +104,14 @@ Public Module CoreModule
    Private Function GetWindowClass(WindowH As Integer) As String
       Dim Buffer As IntPtr = AllocHGlobal(UShort.MaxValue)
       Dim Length As Integer = CInt(GetClassNameW(WindowH, Buffer, UShort.MaxValue))
-      Dim WindowClass As String = If(Length > 0, PtrToStringUni(Buffer).Substring(0, Length), "")
+      Dim WindowClass As String = If(Length > 0, PtrToStringUni(Buffer).Substring(0, Length), Nothing)
 
       FreeHGlobal(Buffer)
 
       Return WindowClass
    End Function
 
-   ''???
+   ''This procedure returns the specified window's class and text preceded by any parent windows' information.
    Private Function GetWindowPath(WindowHandle As Integer) As String
       Dim WindowPath As New StringBuilder
 
@@ -154,7 +154,7 @@ Public Module CoreModule
       WindowText = PtrToStringUni(Buffer)
       FreeHGlobal(Buffer)
 
-      WindowText = If(Length <= WindowText.Length, WindowText.Substring(0, Length), "")
+      WindowText = If(Length <= WindowText.Length, WindowText.Substring(0, Length), Nothing)
 
       If Not PasswordCharacter = Nothing Then PostMessageA(WindowH, EM_SETPASSWORDCHAR, PasswordCharacter, Nothing)
 
