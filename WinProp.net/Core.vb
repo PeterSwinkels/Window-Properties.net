@@ -111,7 +111,7 @@ Public Module CoreModule
       Return WindowClass
    End Function
 
-   ''This procedure returns the specified window's class and text preceded by any parent windows' information.
+   'This procedure returns the specified window's class and text preceded by any parent windows' information.
    Private Function GetWindowPath(WindowHandle As Integer) As String
       Dim WindowPath As New StringBuilder
 
