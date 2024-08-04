@@ -25,29 +25,29 @@ Public Module CoreModule
    Private Const WM_GETTEXT As Integer = &HD%
    Private Const WM_GETTEXTLENGTH As Integer = &HE%
 
-   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumChildWindows(ByVal hWndParent As Integer, ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumChildWindows(ByVal hWndParent As IntPtr, ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As IntPtr) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumPropsExA(ByVal hwnd As Integer, ByVal lpEnumFunc As PropEnumProcEx, ByVal lParam As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumPropsExA(ByVal hwnd As IntPtr, ByVal lpEnumFunc As PropEnumProcEx, ByVal lParam As IntPtr) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumWindows(ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumWindows(ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As IntPtr) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function GetClassNameW(ByVal hWnd As Integer, ByVal lpClassName As IntPtr, ByVal nMaxCount As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function GetClassNameW(ByVal hWnd As IntPtr, ByVal lpClassName As IntPtr, ByVal nMaxCount As Integer) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function GetParent(ByVal hwnd As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function GetParent(ByVal hwnd As IntPtr) As IntPtr
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function GetWindowLongA(ByVal hwnd As Integer, ByVal nIndex As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function GetWindowLongA(ByVal hwnd As IntPtr, ByVal nIndex As Integer) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function GetWindowThreadProcessId(ByVal hwnd As Integer, ByRef lpdwProcessId As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function GetWindowThreadProcessId(ByVal hwnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function PostMessageA(ByVal hwnd As Integer, ByVal wMsg As Integer, ByVal wParam As Integer, ByVal lParam As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function PostMessageA(ByVal hwnd As IntPtr, ByVal wMsg As Integer, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function SendMessageW(ByVal hwnd As Integer, ByVal Msg As Integer, ByVal wParam As Integer, ByVal lParam As IntPtr) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function SendMessageW(ByVal hwnd As IntPtr, ByVal Msg As Integer, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Integer
    End Function
    <DllImport("User32.dll", SetLastError:=True)> Private Function SetPropA(ByVal hwnd As IntPtr, ByVal lpString As String, ByVal hData As IntPtr) As Integer
    End Function
 
-   Private Delegate Function EnumWindowsProc(ByVal hWnd As Integer, ByVal lParam As Integer) As Integer
-   Private Delegate Function PropEnumProcEx(ByVal hwnd As Integer, ByVal lpszString As IntPtr, ByVal hData As IntPtr, ByVal dwData As Integer) As Integer
+   Private Delegate Function EnumWindowsProc(ByVal hWnd As IntPtr, ByVal lParam As IntPtr) As Integer
+   Private Delegate Function PropEnumProcEx(ByVal hwnd As IntPtr, ByVal lpszString As IntPtr, ByVal hData As IntPtr, ByVal dwData As Integer) As Integer
 
    'This structure defines a window's property.
    Private Structure WindowPropertyStr
@@ -60,7 +60,7 @@ Public Module CoreModule
    'This procedure is executed when this program is started.
    Public Sub Main()
       Try
-         EnumWindows(AddressOf HandleWindow, CInt(0))
+         EnumWindows(AddressOf HandleWindow, IntPtr.Zero)
       Catch ExceptionO As Exception
          DisplayError(ExceptionO)
       End Try
@@ -77,7 +77,7 @@ Public Module CoreModule
    End Sub
 
    'This procedure displays the specified window's information.
-   Private Sub DisplayWindowInformation(WindowH As Integer)
+   Private Sub DisplayWindowInformation(WindowH As IntPtr)
       Try
          Console.ForegroundColor = ConsoleColor.Yellow
          Console.WriteLine(GetWindowProcessPath(WindowH))
@@ -130,7 +130,7 @@ Public Module CoreModule
    End Function
 
    'This procedure returns the specified window's class.
-   Private Function GetWindowClass(WindowH As Integer) As String
+   Private Function GetWindowClass(WindowH As IntPtr) As String
       Try
          Dim Buffer As IntPtr = AllocHGlobal(UShort.MaxValue)
          Dim Length As Integer = CInt(GetClassNameW(WindowH, Buffer, UShort.MaxValue))
@@ -147,11 +147,11 @@ Public Module CoreModule
    End Function
 
    'This procedure returns the specified window's class and text preceded by any parent windows' information.
-   Private Function GetWindowPath(WindowHandle As Integer) As String
+   Private Function GetWindowPath(WindowHandle As IntPtr) As String
       Try
          Dim WindowPath As New StringBuilder
 
-         Do Until WindowHandle = 0
+         Do Until WindowHandle = IntPtr.Zero
             If WindowPath.Length > 0 Then WindowPath.Append("\")
             WindowPath.Append($"""{Escape(GetWindowText(WindowHandle)).Trim()}""(""{Escape(GetWindowClass(WindowHandle)).Trim()}"")")
             WindowHandle = GetParent(WindowHandle)
@@ -166,7 +166,7 @@ Public Module CoreModule
    End Function
 
    'This procedure returns the specified window's process path.
-   Private Function GetWindowProcessPath(WindowH As Integer) As String
+   Private Function GetWindowProcessPath(WindowH As IntPtr) As String
       Try
          Dim ProcessId As New Integer
 
@@ -181,7 +181,7 @@ Public Module CoreModule
    End Function
 
    'This procedure returns the specified window's text.
-   Private Function GetWindowText(WindowH As Integer) As String
+   Private Function GetWindowText(WindowH As IntPtr) As String
       Try
          Dim Buffer As New IntPtr
          Dim Length As New Integer
@@ -189,22 +189,22 @@ Public Module CoreModule
          Dim WindowText As String = Nothing
 
          If WindowHasStyle(WindowH, ES_PASSWORD) Then
-            PasswordCharacter = CInt(SendMessageW(WindowH, EM_GETPASSWORDCHAR, Nothing, Nothing))
+            PasswordCharacter = CInt(SendMessageW(WindowH, EM_GETPASSWORDCHAR, IntPtr.Zero, IntPtr.Zero))
             If Not PasswordCharacter = Nothing Then
-               PostMessageA(WindowH, EM_SETPASSWORDCHAR, Nothing, Nothing)
+               PostMessageA(WindowH, EM_SETPASSWORDCHAR, IntPtr.Zero, IntPtr.Zero)
                Sleep(1000)
             End If
          End If
 
-         Length = CInt(SendMessageW(WindowH, WM_GETTEXTLENGTH, Nothing, Nothing)) + 1
+         Length = CInt(SendMessageW(WindowH, WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero)) + 1
          Buffer = AllocHGlobal(UShort.MaxValue)
-         Length = CInt(SendMessageW(WindowH, WM_GETTEXT, Length, Buffer))
+         Length = CInt(SendMessageW(WindowH, WM_GETTEXT, CType(Length, IntPtr), Buffer))
          WindowText = PtrToStringUni(Buffer)
          FreeHGlobal(Buffer)
 
          WindowText = If(Length <= WindowText.Length, WindowText.Substring(0, Length), Nothing)
 
-         If Not PasswordCharacter = Nothing Then PostMessageA(WindowH, EM_SETPASSWORDCHAR, PasswordCharacter, Nothing)
+         If Not PasswordCharacter = Nothing Then PostMessageA(WindowH, EM_SETPASSWORDCHAR, CType(PasswordCharacter, IntPtr), IntPtr.Zero)
 
          Return WindowText
       Catch ExceptionO As Exception
@@ -215,10 +215,10 @@ Public Module CoreModule
    End Function
 
    'This procedure handles the specified child window.
-   Private Function HandleChildWindow(hWnd As Integer, lParam As Integer) As Integer
+   Private Function HandleChildWindow(hWnd As IntPtr, lParam As IntPtr) As Integer
       Try
          WindowProperties.Clear()
-         EnumPropsExA(hWnd, AddressOf HandleWindowProperty, CInt(0))
+         EnumPropsExA(hWnd, AddressOf HandleWindowProperty, IntPtr.Zero)
          If WindowProperties.Count > 0 Then
             Console.WriteLine()
             DisplayWindowInformation(hWnd)
@@ -234,18 +234,18 @@ Public Module CoreModule
    End Function
 
    'This procedure handles the specified window.
-   Private Function HandleWindow(hWnd As Integer, lParam As Integer) As Integer
+   Private Function HandleWindow(hWnd As IntPtr, lParam As IntPtr) As Integer
       Try
          WindowProperties.Clear()
 
-         EnumPropsExA(hWnd, AddressOf HandleWindowProperty, CInt(0))
+         EnumPropsExA(hWnd, AddressOf HandleWindowProperty, IntPtr.Zero)
          If WindowProperties.Count > 0 Then
             Console.WriteLine()
             DisplayWindowInformation(hWnd)
             DisplayWindowProperties(WindowProperties)
          End If
 
-         EnumChildWindows(hWnd, AddressOf HandleChildWindow, CInt(0))
+         EnumChildWindows(hWnd, AddressOf HandleChildWindow, IntPtr.Zero)
 
          Return CInt(True)
       Catch ExceptionO As Exception
@@ -256,7 +256,7 @@ Public Module CoreModule
    End Function
 
    'This procedure handles the specified window property.
-   Private Function HandleWindowProperty(ByVal hwnd As Integer, ByVal lpszString As IntPtr, ByVal hData As IntPtr, ByVal dwData As Integer) As Integer
+   Private Function HandleWindowProperty(ByVal hwnd As IntPtr, ByVal lpszString As IntPtr, ByVal hData As IntPtr, ByVal dwData As Integer) As Integer
       Try
          WindowProperties.Add(New WindowPropertyStr With {.Name = PtrToStringAnsi(lpszString), .Value = Escape(PtrToStringAnsi(hData))})
 
@@ -269,7 +269,7 @@ Public Module CoreModule
    End Function
 
    'This procedure returns the checks whether a window has the specified style and returns the result.
-   Private Function WindowHasStyle(WindowH As Integer, Style As Integer) As Boolean
+   Private Function WindowHasStyle(WindowH As IntPtr, Style As Integer) As Boolean
       Try
          Return (CInt(GetWindowLongA(WindowH, GWL_STYLE)) And Style) = Style
       Catch ExceptionO As Exception
