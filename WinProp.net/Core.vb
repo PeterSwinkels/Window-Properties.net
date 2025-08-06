@@ -18,26 +18,26 @@ Imports System.Threading.Thread
 'This module contains this program's core procedures.
 Public Module CoreModule
    'The Microsoft Windows API constants, delegates, and functions used by this module.
-   Private Const EM_GETPASSWORDCHAR As Integer = &HD2%
-   Private Const EM_SETPASSWORDCHAR As Integer = &HCC%
-   Private Const ES_PASSWORD As Integer = &H20%
-   Private Const GWL_STYLE As Integer = &HFFFFFFF0%
-   Private Const WM_GETTEXT As Integer = &HD%
-   Private Const WM_GETTEXTLENGTH As Integer = &HE%
+   Private Const EM_GETPASSWORDCHAR As UInteger = &HD2UI
+   Private Const EM_SETPASSWORDCHAR As UInteger = &HCCUI
+   Private Const ES_PASSWORD As UInteger = &H20UI
+   Private Const GWL_STYLE As UInteger = &HFFFFFFF0UI
+   Private Const WM_GETTEXT As UInteger = &HDUI
+   Private Const WM_GETTEXTLENGTH As UInteger = &HEUI
 
-   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumChildWindows(ByVal hWndParent As IntPtr, ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As IntPtr) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumChildWindows(ByVal hWndParent As IntPtr, ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As IntPtr) As Boolean
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumPropsExA(ByVal hwnd As IntPtr, ByVal lpEnumFunc As PropEnumProcEx, ByVal lParam As IntPtr) As Integer
+   <DllImport("User32.dll", CharSet:=CharSet.Ansi, SetLastError:=True)> Private Function EnumPropsExA(ByVal hwnd As IntPtr, ByVal lpEnumFunc As PropEnumProcEx, ByVal lParam As IntPtr) As UInteger
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumWindows(ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As IntPtr) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function EnumWindows(ByVal lpEnumFunc As EnumWindowsProc, ByVal lParam As IntPtr) As Boolean
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function GetClassNameW(ByVal hWnd As IntPtr, ByVal lpClassName As IntPtr, ByVal nMaxCount As Integer) As Integer
+   <DllImport("User32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)> Private Function GetClassNameW(ByVal hWnd As IntPtr, ByVal lpClassName As StringBuilder, ByVal nMaxCount As Integer) As Integer
    End Function
    <DllImport("User32.dll", SetLastError:=True)> Private Function GetParent(ByVal hwnd As IntPtr) As IntPtr
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function GetWindowLongA(ByVal hwnd As IntPtr, ByVal nIndex As Integer) As Integer
+   <DllImport("User32.dll", CharSet:=CharSet.Ansi, SetLastError:=True)> Private Function GetWindowLongA(ByVal hwnd As IntPtr, ByVal nIndex As UInteger) As Integer
    End Function
-   <DllImport("User32.dll", SetLastError:=True)> Private Function GetWindowThreadProcessId(ByVal hwnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
+   <DllImport("User32.dll", SetLastError:=True)> Private Function GetWindowThreadProcessId(ByVal hwnd As IntPtr, ByRef lpdwProcessId As UInteger) As Integer
    End Function
    <DllImport("User32.dll", SetLastError:=True)> Private Function PostMessageA(ByVal hwnd As IntPtr, ByVal wMsg As Integer, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Integer
    End Function
@@ -132,11 +132,9 @@ Public Module CoreModule
    'This procedure returns the specified window's class.
    Private Function GetWindowClass(WindowH As IntPtr) As String
       Try
-         Dim Buffer As IntPtr = AllocHGlobal(UShort.MaxValue)
-         Dim Length As Integer = CInt(GetClassNameW(WindowH, Buffer, UShort.MaxValue))
-         Dim WindowClass As String = If(Length > 0, PtrToStringUni(Buffer).Substring(0, Length), Nothing)
-
-         FreeHGlobal(Buffer)
+         Dim Buffer As New StringBuilder(UShort.MaxValue)
+         Dim Length As Integer = CInt(GetClassNameW(WindowH, Buffer, Buffer.Capacity))
+         Dim WindowClass As String = If(Length > 0, Buffer.ToString(), Nothing)
 
          Return WindowClass
       Catch ExceptionO As Exception
@@ -168,11 +166,11 @@ Public Module CoreModule
    'This procedure returns the specified window's process path.
    Private Function GetWindowProcessPath(WindowH As IntPtr) As String
       Try
-         Dim ProcessId As New Integer
+         Dim ProcessId As New UInteger
 
          GetWindowThreadProcessId(WindowH, ProcessId)
 
-         Return Process.GetProcessById(ProcessId).MainModule.FileName
+         Return Process.GetProcessById(CInt(ProcessId)).MainModule.FileName
       Catch ExceptionO As Exception
          DisplayError(ExceptionO)
       End Try
@@ -269,7 +267,7 @@ Public Module CoreModule
    End Function
 
    'This procedure returns the checks whether a window has the specified style and returns the result.
-   Private Function WindowHasStyle(WindowH As IntPtr, Style As Integer) As Boolean
+   Private Function WindowHasStyle(WindowH As IntPtr, Style As UInteger) As Boolean
       Try
          Return (CInt(GetWindowLongA(WindowH, GWL_STYLE)) And Style) = Style
       Catch ExceptionO As Exception
